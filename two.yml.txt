@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-svc
+  labels:
+    env: production
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    env: production
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pod-pvc
+  labels:
+    env: production
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myweb-deploy
+  labels: 
+    env: production
+spec:
+  replicas: 3
+  selector: 
+    matchLabels:
+      env: production
+  template:
+    metadata:
+      name: myweb-con
+      labels:
+        env: production
+    spec:
+      containers:
+      - image: vimal13/apache-webserver-php
+        name: php-web
+        ports:
+        - containerPort: 80
+          name: php-web
+        volumeMounts:
+        - name: web-vol1
+          mountPath: /var/www/html
+      volumes:
+      - name: web-vol1
+        persistentVolumeClaim:
+          claimName: pod-pvc 
